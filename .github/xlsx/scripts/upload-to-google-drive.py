@@ -9,16 +9,10 @@ if len(sys.argv) < 2:
     exit(1)
 
 def set_version():
-    if (len( sys.argv ) > 2):
-        return "-"+str(sys.argv[2])
-    else:
-        return ""
+    return f"-{str(sys.argv[2])}" if (len( sys.argv ) > 2) else ""
 
 def set_file_id():
-    if (len( sys.argv ) > 1):
-        return str(sys.argv[1])
-    else:
-        return ""
+    return str(sys.argv[1]) if (len( sys.argv ) > 1) else ""
 
 def set_sheet_title(version):
    return "WSTG-Checklist{version}.xlsx".replace('{version}', version)
