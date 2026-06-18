@@ -13,10 +13,7 @@ workbook = load_workbook(filename=checklist_template)
 sheet = workbook.active
 
 def set_version():
-    if (len( sys.argv ) > 1):
-        return str(sys.argv[1])+" "
-    else:
-        return ""
+    return f"{str(sys.argv[1])} " if (len( sys.argv ) > 1) else ""
 
 def sha256file(file):
     filename = file
@@ -38,9 +35,7 @@ def copy_cell(cellFrom, cellTo):
 
 def lines_of_text(txt, width):
     lines = txt.split("\n")
-    total_lines = 0
-    for line in lines:
-        total_lines += max(1, ceil(len(line) / float(width)))
+    total_lines = sum(max(1, ceil(len(line) / float(width))) for line in lines)
     return int(total_lines)
 
 def copy_row(sheet, rowFrom, rowTo):
@@ -80,7 +75,7 @@ def insert_new_item(sheet, id, name, link, objective):
 
     # Set values
     sheet.cell(row=row, column=col_id, value=id)
-    sheet.cell(row=row, column=col_name, value='=HYPERLINK("{}", "{}")'.format(link, name))
+    sheet.cell(row=row, column=col_name, value=f'=HYPERLINK("{link}", "{name}")')
     sheet.cell(row=row, column=col_objective, value=objective)
 
     base_height = sheet.row_dimensions[row_template_offset].height
@@ -104,13 +99,13 @@ version = set_version()
 set_sheet_title(sheet, version)
 
 for categoryKey in checklist['categories']:
-    print("Generate category: " + categoryKey)
+    print(f"Generate category: {categoryKey}")
     category = checklist['categories'][categoryKey]
 
     insert_new_header(sheet, categoryKey)
 
+    separator = "- "
     for item in category['tests']:
-        separator = "- "
         emptyObjective = item['objectives'][0] == ""
         objective = "N/A" if emptyObjective else separator + ("\n"+separator).join(item['objectives'])
         insert_new_item(sheet,
@@ -123,7 +118,7 @@ for categoryKey in checklist['categories']:
 # Replicates conditional formatting
 cf = list(sheet.conditional_formatting._cf_rules.keys())[0]
 rules = sheet.conditional_formatting._cf_rules[cf]
-cf_range = "B4:F"+str(sheet.max_row)
+cf_range = f"B4:F{str(sheet.max_row)}"
 for rule in rules:
     new_rule = copy(rule)
     sheet.conditional_formatting.add(cf_range, copy(rule))
@@ -142,7 +137,9 @@ file_sha256 = sha256file(checklist_output_file)
 readme_content = ''
 with open (checklist_readme_path, 'r' ) as f:
     content = f.read()
-    readme_content = re.sub('SHA-256: (\w+)', 'SHA-256: '+file_sha256, content, flags = re.M)
+    readme_content = re.sub(
+        'SHA-256: (\w+)', f'SHA-256: {file_sha256}', content, flags=re.M
+    )
 
 with open (checklist_readme_path, 'w') as f:
     f.write(readme_content)
